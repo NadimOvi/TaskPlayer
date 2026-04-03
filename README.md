@@ -8,7 +8,7 @@ I used Kotlin with Jetpack Compose for the UI, ExoPlayer for video playback, and
 
 ## Download
 
-[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen)](https://github.com/NadimOvi/TaskPlayer/releases/download/v1.0.0/app-debug.apk)
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen)](https://github.com/NadimOvi/TaskPlayer/releases/download/1.0.0/app-debug.apk)
 
 ---
 
