@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -357,25 +359,41 @@ fun VideoCard(
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun ExoPlayerView(videoUrl: String, modifier: Modifier = Modifier) {
-    val context        = LocalContext.current
+    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // 1. Initialize ExoPlayer with Audio Attributes
     val exoPlayer = remember(videoUrl) {
         ExoPlayer.Builder(context).build().apply {
+
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .build()
+
+
+            setAudioAttributes(audioAttributes, true)
+
             setMediaItem(MediaItem.fromUri(videoUrl))
-            repeatMode    = Player.REPEAT_MODE_ONE
-            volume        = 1f
+            repeatMode = Player.REPEAT_MODE_ONE
+            volume = 1f
             prepare()
-            playWhenReady = true
         }
     }
+
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> exoPlayer.play()
-                Lifecycle.Event.ON_PAUSE  -> exoPlayer.pause()
-                else                      -> Unit
+                Lifecycle.Event.ON_RESUME -> {
+                    exoPlayer.playWhenReady = true
+                    exoPlayer.play()
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    exoPlayer.playWhenReady = false
+                    exoPlayer.pause()
+                }
+                else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -388,9 +406,10 @@ fun ExoPlayerView(videoUrl: String, modifier: Modifier = Modifier) {
     AndroidView(
         factory = { ctx ->
             PlayerView(ctx).apply {
-                player       = exoPlayer
+                player = exoPlayer
                 useController = true
-                layoutParams  = ViewGroup.LayoutParams(
+
+                layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )

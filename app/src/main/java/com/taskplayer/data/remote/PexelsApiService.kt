@@ -15,7 +15,7 @@ interface PexelsApiService {
     suspend fun searchVideos(
         @Query("query")       query: String,
         @Query("per_page")    perPage: Int = Constants.MAX_RESULTS,
-        @Query("orientation") orientation: String = "portrait"
+        @Query("orientation") orientation: String = "landscape"
     ): PexelsVideoResponse
 
     companion object {

@@ -6,7 +6,7 @@ object MockExperts {
 
     val all = listOf(
         Expert(
-            id            = "e1",
+            id            = "1",
             name          = "Dr. Sarah Mitchell",
             title         = "Nutrition & Wellness Expert",
             bio           = "Dr. Sarah Mitchell is a certified nutritionist with over 12 years of experience helping people transform their health through science-based dietary strategies.",
@@ -16,7 +16,7 @@ object MockExperts {
             totalSessions = 530
         ),
         Expert(
-            id            = "e2",
+            id            = "2",
             name          = "Marcus Reid",
             title         = "High Performance Coach",
             bio           = "Marcus is a former professional athlete turned performance coach. He specializes in building mental toughness, peak physical conditioning, and elite daily routines.",
@@ -26,7 +26,7 @@ object MockExperts {
             totalSessions = 320
         ),
         Expert(
-            id            = "e3",
+            id            = "3",
             name          = "Dr. Leila Ahmadi",
             title         = "Clinical Psychologist",
             bio           = "Dr. Leila Ahmadi specializes in anxiety, burnout, and cognitive behavioral therapy with a calm, evidence-based approach to mental wellness.",
@@ -36,7 +36,7 @@ object MockExperts {
             totalSessions = 780
         ),
         Expert(
-            id            = "e4",
+            id            = "4",
             name          = "James Owusu",
             title         = "Business Strategy Advisor",
             bio           = "James is a seasoned entrepreneur who has helped launch over 30 startups. He focuses on lean strategy, product-market fit, and scalable systems.",
@@ -46,7 +46,7 @@ object MockExperts {
             totalSessions = 210
         ),
         Expert(
-            id            = "e5",
+            id            = "5",
             name          = "Emma Lawson",
             title         = "Mindfulness & Meditation Guide",
             bio           = "Emma blends ancient mindfulness techniques with modern neuroscience to help people find clarity and reduce stress in everyday life.",
@@ -56,7 +56,7 @@ object MockExperts {
             totalSessions = 950
         ),
         Expert(
-            id            = "e6",
+            id            = "6",
             name          = "Daniel Park",
             title         = "Personal Finance Expert",
             bio           = "Daniel helps everyday people build wealth through simple, proven financial strategies. Former Wall Street analyst turned financial educator.",

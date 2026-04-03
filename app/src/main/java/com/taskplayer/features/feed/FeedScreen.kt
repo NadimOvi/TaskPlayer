@@ -7,12 +7,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.taskplayer.core.theme.*
 import com.taskplayer.features.feed.components.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel,
@@ -21,78 +22,58 @@ fun FeedScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text  = "TaskPlayer",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = TextPrimary
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onSavedClick) {
-                        Icon(
-                            imageVector        = Icons.Default.Bookmark,
-                            contentDescription = "Saved",
-                            tint               = AccentCyan
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundDark
-                )
-            )
-        },
-        containerColor = BackgroundDark
-    ) { padding ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            uiState.error?.let { error ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    color    = AccentRed.copy(alpha = 0.15f),
-                    shape    = MaterialTheme.shapes.medium
-                ) {
-                    Text(
-                        text     = error,
-                        color    = AccentRed,
-                        style    = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(12.dp)
-                    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
+        if (uiState.isLoading) {
+            LazyColumn(
+                contentPadding      = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    AppHeader(onSavedClick = onSavedClick)
                 }
+                items(5) { ShimmerCard() }
             }
+        } else {
+            LazyColumn(
+                contentPadding      = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
-            if (uiState.isLoading) {
-                LazyColumn(
-                    contentPadding      = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(5) { ShimmerCard() }
+                item {
+                    AppHeader(onSavedClick = onSavedClick)
                 }
-            } else {
-                LazyColumn(
-                    contentPadding      = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(uiState.videos, key = { it.id }) { video ->
-                        VideoCard(
-                            video         = video,
-                            onLike        = { viewModel.toggleLike(video.id) },
-                            onSave        = { viewModel.toggleSave(video.id) },
-                            onUnlock      = { viewModel.unlockVideo(video.id) },
-                            onViewProfile = { onViewProfile(video.expert.id) },
-                            onSmart       = { viewModel.openSmartSheet(video.id) },
-                            onFollow      = { viewModel.toggleFollow(video.expert.id) }
-                        )
+
+                uiState.error?.let { error ->
+                    item {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color    = AccentRed.copy(alpha = 0.15f),
+                            shape    = MaterialTheme.shapes.medium
+                        ) {
+                            Text(
+                                text     = error,
+                                color    = AccentRed,
+                                style    = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
                     }
+                }
+
+                items(uiState.videos, key = { it.id }) { video ->
+                    VideoCard(
+                        video         = video,
+                        onLike        = { viewModel.toggleLike(video.id) },
+                        onSave        = { viewModel.toggleSave(video.id) },
+                        onUnlock      = { viewModel.unlockVideo(video.id) },
+                        onViewProfile = { onViewProfile(video.expert.id) },
+                        onSmart       = { viewModel.openSmartSheet(video.id) },
+                        onFollow      = { viewModel.toggleFollow(video.expert.id) }
+                    )
                 }
             }
         }
@@ -103,6 +84,32 @@ fun FeedScreen(
             SmartSummarySheet(
                 video     = video,
                 onDismiss = { viewModel.closeSmartSheet() }
+            )
+        }
+    }
+}
+
+@Composable
+fun AppHeader(onSavedClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment     = Alignment.CenterVertically
+    ) {
+        Text(
+            text  = "TaskPlayer",
+            style = MaterialTheme.typography.headlineLarge,
+            color = TextPrimary
+        )
+
+        IconButton(onClick = onSavedClick) {
+            Icon(
+                imageVector        = Icons.Default.Bookmark,
+                contentDescription = "Saved",
+                tint               = AccentCyan,
+                modifier           = Modifier.size(26.dp)
             )
         }
     }
