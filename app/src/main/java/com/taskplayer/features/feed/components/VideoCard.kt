@@ -1,7 +1,6 @@
 package com.taskplayer.features.feed.components
 
 import android.view.ViewGroup
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -31,6 +30,8 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.taskplayer.core.theme.*
 import com.taskplayer.data.model.AccessType
 import com.taskplayer.data.model.Video
@@ -46,112 +47,31 @@ fun VideoCard(
     onSmart: () -> Unit,
     onFollow: () -> Unit
 ) {
-    var isPlaying by remember { mutableStateOf(false) }
-    val canPlay = video.accessType == AccessType.FREE || video.isUnlocked
+    var isPlaying by remember(video.id) { mutableStateOf(false) }
+    val canPlay   = video.accessType == AccessType.FREE || video.isUnlocked
+    val context   = LocalContext.current
+
+    DisposableEffect(video.id) {
+        onDispose { isPlaying = false }
+    }
 
     Card(
         modifier  = Modifier.fillMaxWidth(),
         shape     = RoundedCornerShape(20.dp),
         colors    = CardDefaults.cardColors(containerColor = CardDark),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column {
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(210.dp)
             ) {
-                AnimatedContent(
-                    targetState = isPlaying && canPlay,
-                    label       = "player"
-                ) { playing ->
-                    if (playing) {
-                        ExoPlayerView(
-                            videoUrl = video.videoUrl,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Box(modifier = Modifier.fillMaxSize()) {
-
-                            AsyncImage(
-                                model              = video.thumbnailUrl,
-                                contentDescription = video.videoTitle,
-                                contentScale       = ContentScale.Crop,
-                                modifier           = Modifier.fillMaxSize()
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        Brush.verticalGradient(
-                                            colors = listOf(Color.Transparent, Color(0xDD0F0E1A)),
-                                            startY = 60f
-                                        )
-                                    )
-                            )
-
-                            Surface(
-                                modifier = Modifier
-                                    .align(Alignment.TopStart)
-                                    .padding(10.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (video.accessType == AccessType.FREE)
-                                    AccentGreen.copy(alpha = 0.9f) else PremiumBadgeBg
-                            ) {
-                                Text(
-                                    text     = if (video.accessType == AccessType.FREE) "FREE" else "⭐ PREMIUM",
-                                    style    = MaterialTheme.typography.labelSmall,
-                                    color    = if (video.accessType == AccessType.FREE) Color.White else PremiumGold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-
-                            Surface(
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(10.dp),
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xAA000000)
-                            ) {
-                                Text(
-                                    text     = video.duration,
-                                    style    = MaterialTheme.typography.labelSmall,
-                                    color    = TextPrimary,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                )
-                            }
-
-                            if (canPlay) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .size(58.dp)
-                                        .background(
-                                            Brush.radialGradient(listOf(GradientStart, GradientMid)),
-                                            CircleShape
-                                        )
-                                        .clickable { isPlaying = true },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector        = Icons.Default.PlayArrow,
-                                        contentDescription = "Play",
-                                        tint               = Color.White,
-                                        modifier           = Modifier.size(32.dp)
-                                    )
-                                }
-                            }
-
-                            if (video.accessType == AccessType.PREMIUM && !video.isUnlocked) {
-                                PremiumOverlay(onUnlock = onUnlock, price = video.price)
-                            }
-                        }
-                    }
-                }
-
                 if (isPlaying && canPlay) {
+                    ExoPlayerView(
+                        videoUrl = video.videoUrl,
+                        modifier = Modifier.fillMaxSize()
+                    )
                     IconButton(
                         onClick  = { isPlaying = false },
                         modifier = Modifier
@@ -167,6 +87,83 @@ fun VideoCard(
                             modifier           = Modifier.size(16.dp)
                         )
                     }
+                } else {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(video.thumbnailUrl)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .crossfade(false)
+                            .size(800, 500)
+                            .build(),
+                        contentDescription = null,
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.fillMaxSize()
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color(0xDD0F0E1A)),
+                                    startY = 60f
+                                )
+                            )
+                    )
+
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (video.accessType == AccessType.FREE)
+                            AccentGreen.copy(alpha = 0.9f) else PremiumBadgeBg
+                    ) {
+                        Text(
+                            text     = if (video.accessType == AccessType.FREE) "FREE" else "⭐ PREMIUM",
+                            style    = MaterialTheme.typography.labelSmall,
+                            color    = if (video.accessType == AccessType.FREE) Color.White else PremiumGold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xAA000000)
+                    ) {
+                        Text(
+                            text     = video.duration,
+                            style    = MaterialTheme.typography.labelSmall,
+                            color    = TextPrimary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                        )
+                    }
+
+                    if (canPlay) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(58.dp)
+                                .background(GradientRadialBrush, CircleShape)
+                                .clickable { isPlaying = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.PlayArrow,
+                                contentDescription = "Play",
+                                tint               = Color.White,
+                                modifier           = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+
+                    if (video.accessType == AccessType.PREMIUM && !video.isUnlocked) {
+                        PremiumOverlay(onUnlock = onUnlock, price = video.price)
+                    }
                 }
             }
 
@@ -177,17 +174,19 @@ fun VideoCard(
                     modifier          = Modifier.fillMaxWidth()
                 ) {
                     AsyncImage(
-                        model              = video.expert.photoUrl,
-                        contentDescription = video.expert.name,
+                        model = ImageRequest.Builder(context)
+                            .data(video.expert.photoUrl)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .crossfade(false)
+                            .size(120, 120)
+                            .build(),
+                        contentDescription = null,
                         contentScale       = ContentScale.Crop,
                         modifier           = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .border(
-                                2.dp,
-                                Brush.sweepGradient(listOf(GradientStart, GradientEnd)),
-                                CircleShape
-                            )
+                            .border(2.dp, GradientSweepBrush, CircleShape)
                     )
 
                     Spacer(modifier = Modifier.width(10.dp))
@@ -209,10 +208,8 @@ fun VideoCard(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .background(
-                                if (video.expert.isFollowed)
-                                    Brush.horizontalGradient(listOf(GradientStart, GradientMid))
-                                else
-                                    Brush.horizontalGradient(listOf(CardElevated, CardElevated))
+                                if (video.expert.isFollowed) FollowActiveBrush
+                                else FollowInactiveBrush
                             )
                             .clickable { onFollow() }
                             .padding(horizontal = 14.dp, vertical = 7.dp)
@@ -247,16 +244,20 @@ fun VideoCard(
 
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     video.tags.take(3).forEach { tag ->
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = CardElevated
-                        ) {
-                            Text(
-                                text     = "# $tag",
-                                style    = MaterialTheme.typography.labelSmall,
-                                color    = AccentCyan,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
+                        key(tag) {
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = CardElevated
+                            ) {
+                                Text(
+                                    text     = "# $tag",
+                                    style    = MaterialTheme.typography.labelSmall,
+                                    color    = AccentCyan,
+                                    modifier = Modifier.padding(
+                                        horizontal = 10.dp, vertical = 4.dp
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -272,7 +273,8 @@ fun VideoCard(
                 ) {
                     IconButton(onClick = onLike) {
                         Icon(
-                            imageVector        = if (video.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            imageVector        = if (video.isLiked) Icons.Filled.Favorite
+                            else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Like",
                             tint               = if (video.isLiked) AccentRed else TextSecondary,
                             modifier           = Modifier.size(22.dp)
@@ -281,7 +283,8 @@ fun VideoCard(
 
                     IconButton(onClick = onSave) {
                         Icon(
-                            imageVector        = if (video.isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            imageVector        = if (video.isSaved) Icons.Filled.Bookmark
+                            else Icons.Outlined.BookmarkBorder,
                             contentDescription = "Save",
                             tint               = if (video.isSaved) AccentYellow else TextSecondary,
                             modifier           = Modifier.size(22.dp)
@@ -293,7 +296,10 @@ fun VideoCard(
                             .clip(RoundedCornerShape(20.dp))
                             .background(
                                 Brush.horizontalGradient(
-                                    listOf(AccentPurple.copy(alpha = 0.2f), AccentBlue.copy(alpha = 0.2f))
+                                    listOf(
+                                        AccentPurple.copy(alpha = 0.2f),
+                                        AccentBlue.copy(alpha = 0.2f)
+                                    )
                                 )
                             )
                             .clickable { onSmart() }
@@ -339,7 +345,7 @@ fun VideoCard(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Brush.horizontalGradient(listOf(GradientStart, GradientMid)))
+                            .background(GradientBrush)
                             .clickable { }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
@@ -359,28 +365,23 @@ fun VideoCard(
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun ExoPlayerView(videoUrl: String, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+    val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // 1. Initialize ExoPlayer with Audio Attributes
     val exoPlayer = remember(videoUrl) {
         ExoPlayer.Builder(context).build().apply {
-
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
                 .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                 .build()
-
-
             setAudioAttributes(audioAttributes, true)
-
             setMediaItem(MediaItem.fromUri(videoUrl))
-            repeatMode = Player.REPEAT_MODE_ONE
-            volume = 1f
+            repeatMode    = Player.REPEAT_MODE_ONE
+            volume        = 1f
             prepare()
+            playWhenReady = true
         }
     }
-
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -389,7 +390,7 @@ fun ExoPlayerView(videoUrl: String, modifier: Modifier = Modifier) {
                     exoPlayer.playWhenReady = true
                     exoPlayer.play()
                 }
-                Lifecycle.Event.ON_PAUSE -> {
+                Lifecycle.Event.ON_PAUSE  -> {
                     exoPlayer.playWhenReady = false
                     exoPlayer.pause()
                 }
@@ -406,10 +407,9 @@ fun ExoPlayerView(videoUrl: String, modifier: Modifier = Modifier) {
     AndroidView(
         factory = { ctx ->
             PlayerView(ctx).apply {
-                player = exoPlayer
+                player        = exoPlayer
                 useController = true
-
-                layoutParams = ViewGroup.LayoutParams(
+                layoutParams  = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )

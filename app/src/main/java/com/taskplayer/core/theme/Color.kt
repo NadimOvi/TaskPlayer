@@ -1,6 +1,7 @@
 package com.taskplayer.core.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 
 val GradientStart    = Color(0xFF6C3AE8)
 val GradientMid      = Color(0xFF4A6CF7)
@@ -26,3 +27,11 @@ val PremiumGold      = Color(0xFFFFD93D)
 val PremiumBadgeBg   = Color(0xFF2A2510)
 
 val DividerColor     = Color(0xFF2A2840)
+
+
+val GradientBrush = Brush.horizontalGradient(listOf(GradientStart, GradientMid))
+val GradientSweepBrush = Brush.sweepGradient(listOf(GradientStart, GradientEnd))
+val GradientRadialBrush = Brush.radialGradient(listOf(GradientStart, GradientMid))
+val FollowActiveBrush = Brush.horizontalGradient(listOf(GradientStart, GradientMid))
+val FollowInactiveBrush = Brush.horizontalGradient(listOf(CardElevated, CardElevated))
+val AiBrush = Brush.horizontalGradient(listOf(AccentPurple, AccentBlue))

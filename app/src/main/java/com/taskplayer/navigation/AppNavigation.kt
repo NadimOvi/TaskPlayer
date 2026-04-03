@@ -2,11 +2,15 @@ package com.taskplayer.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import coil.ImageLoader
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
 import com.taskplayer.data.repository.VideoRepository
 import com.taskplayer.features.feed.FeedScreen
 import com.taskplayer.features.feed.FeedViewModel
@@ -26,9 +30,33 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context       = LocalContext.current
     val repository    = remember { VideoRepository() }
-    val feedVm        = remember { FeedViewModel(repository) }
-    val savedVm       = remember { SavedViewModel(repository) }
+
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .memoryCache {
+                MemoryCache.Builder(context)
+                    .maxSizePercent(0.25)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("image_cache"))
+                    .maxSizePercent(0.02)
+                    .build()
+            }
+            .build()
+    }
+
+    val feedVm  = remember {
+        FeedViewModel(
+            repository  = repository,
+            imageLoader = imageLoader,
+            context     = context
+        )
+    }
+    val savedVm = remember { SavedViewModel(repository) }
 
     NavHost(navController = navController, startDestination = Screen.Feed.route) {
 

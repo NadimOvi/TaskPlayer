@@ -116,5 +116,6 @@ class VideoRepository {
     fun setVideosForTest(videos: List<Video>) {
         _videos.value = videos
     }
+    fun getCurrentVideos(): List<Video> = _videos.value
 }
 

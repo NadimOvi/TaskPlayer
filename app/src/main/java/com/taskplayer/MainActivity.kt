@@ -13,6 +13,7 @@ import com.taskplayer.navigation.AppNavigation
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setBackgroundDrawableResource(android.R.color.black)
         enableEdgeToEdge()
         setContent {
             TaskPlayerTheme {
