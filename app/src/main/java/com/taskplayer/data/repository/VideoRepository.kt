@@ -63,11 +63,14 @@ class VideoRepository {
 
     private fun getBestMp4(video: PexelsVideo): String {
         val files = video.videoFiles.filter { it.fileType == "video/mp4" }
-        return files.firstOrNull {
-            it.quality == "hd" && (it.height ?: 0) > (it.width ?: 0)
-        }?.link
-            ?: files.firstOrNull { it.quality == "hd" }?.link
-            ?: files.firstOrNull { it.quality == "sd" }?.link
+        val landscape = files
+            .filter { (it.width ?: 0) > (it.height ?: 0) }
+            .sortedByDescending { it.width ?: 0 } // best quality
+            .firstOrNull()
+
+        if (landscape != null) return landscape.link
+
+        return files.firstOrNull { it.quality == "hd" }?.link
             ?: files.firstOrNull()?.link
             ?: ""
     }
