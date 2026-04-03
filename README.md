@@ -1,6 +1,14 @@
 # TaskPlayer
 
-An expert learning platform for Android built with Kotlin and Jetpack Compose. Users can browse expert video content, unlock premium sessions, save videos, follow experts, and get AI-generated insights for each video.
+TaskPlayer is an Android app I built as part of a technical evaluation. The idea was to create an expert learning platform where users can watch video sessions from professionals, unlock premium content, follow experts they like, and get a quick AI summary of what a video covers.
+
+I used Kotlin with Jetpack Compose for the UI, ExoPlayer for video playback, and the Pexels API to pull real video content. The whole thing is structured around MVVM so the code stays clean and easy to scale.
+
+---
+
+## Download
+
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen)](https://github.com/NadimOvi/TaskPlayer/releases/download/1.0.0/app-debug.apk)
 
 ---
 
@@ -17,7 +25,7 @@ An expert learning platform for Android built with Kotlin and Jetpack Compose. U
 
 ---
 
-## Tech Stack
+## What I Used
 
 | | |
 |---|---|
@@ -33,88 +41,78 @@ An expert learning platform for Android built with Kotlin and Jetpack Compose. U
 | Async | Kotlin Coroutines |
 | Testing | JUnit4, Coroutines Test, Compose UI Test |
 
-
 ---
 
 ## Project Structure
 
 ![Project Structure](screenshots/project_structure.png)
 
-## Features
+---
 
-- Vertical scrollable expert video feed
-- ExoPlayer streams real MP4 videos inside the app
-- Free videos play directly
-- Premium videos show a lock overlay with price and Unlock button
-- Mock unlock flow with lock-to-open animation
-- Like and save buttons with toggle state
-- Follow / Unfollow expert button
-- View Profile navigates to expert screen with bio, stats, and video list
-- Book Session button on every card and profile screen
-- AI Insights bottom sheet with Key Topics and Smart Summary
-- Saved Videos screen
-- Shimmer loading cards while fetching
-- App title scrolls with content like YouTube
-- Lifecycle-aware ExoPlayer with audio focus management
+## What the App Does
+
+The main screen is a vertical feed of expert video cards. Each card shows the expert's photo, name, title, the video title, a short description, and topic tags. From there you can like a video, save it, follow the expert, open their profile, or book a session.
+
+Videos are either free or premium. Free ones play directly in the app using ExoPlayer. Premium ones show a lock overlay with the price. When you tap Unlock, it runs a short mock flow with an animation and then gives you access to the video.
+
+Each video card has an AI Insights button. Tapping it opens a bottom sheet that shows the key topics as tags and a short summary of what the video covers. This is currently mock logic but it is designed so a real API call can replace it in one place.
+
+The Expert Profile screen shows the expert's photo, bio, stats like followers and rating, and a list of their videos. You can follow them or book a session from there as well.
+
+There is also a Saved Videos screen where all your bookmarked videos appear in a list.
 
 ---
 
-## How to Run
+## How to Run It
 
-**Requirements**
-- Android Studio Hedgehog or later
-- Android SDK 26+
-- Free Pexels API key from https://www.pexels.com/api/
+You need Android Studio (Hedgehog or later), Android SDK 26+, and a free Pexels API key which you can get from https://www.pexels.com/api/
 
-**Steps**
-
-1. Clone the repo
+Clone the project:
 ```bash
-git clone https://github.com/YOUR_USERNAME/TaskPlayer.git
+git clone https://github.com/NadimOvi/TaskPlayer.git
 ```
 
-2. Open in Android Studio
-
-3. Add your Pexels API key in `core/utils/Constants.kt`
+Open it in Android Studio, then go to this file and paste your Pexels key:
+```
+app/src/main/java/com/taskplayer/core/utils/Constants.kt
+```
 ```kotlin
 const val PEXELS_API_KEY = "YOUR_KEY_HERE"
 ```
 
-4. Run on emulator or device (API 26+)
+Then just run it on an emulator or a real device running Android 8.0 or above.
 
 ---
 
-## Running Tests
+## Tests
+
+I wrote unit tests for the repository and viewmodels, and UI tests for the feed screen using Compose testing.
 
 ```bash
-# Unit tests
+# run unit tests
 ./gradlew test
 
-# UI tests (emulator or device required)
+# run UI tests (needs a running emulator or device)
 ./gradlew connectedAndroidTest
 ```
 
-| Test File | Covers |
+| File | What it tests |
 |---|---|
-| VideoRepositoryTest | like, save, unlock, follow, getExpert |
-| FeedViewModelTest | state changes, smart sheet, access types |
-| SavedViewModelTest | saved list empty, fill, remove |
-| FeedScreenTest | UI elements visible, button callbacks |
+| VideoRepositoryTest | like, save, unlock, follow, get expert by id |
+| FeedViewModelTest | state updates, smart sheet open/close, access types |
+| SavedViewModelTest | saved list behavior, add and remove |
+| FeedScreenTest | UI elements are visible, button clicks trigger correct callbacks |
 
 ---
 
-## Assumptions
+## A Few Notes
 
-- No real payment — unlock is a simulated 1.2 second mock flow
-- Expert data is local mock data, not from an API
-- Video titles and descriptions are curated and mapped to Pexels video slots
-- AI Insights summary is generated locally from video metadata
-- State is in memory — not persisted across app restarts
-- Portrait mode only
+I did not integrate real payment — the unlock flow is simulated with a short delay and animation. Expert data is hardcoded locally since the task did not require a backend for that. The AI summary is also mock for now but structured cleanly so it is easy to swap in a real model later. The app supports both portrait and landscape mode and state is not persisted between sessions.
 
 ---
 
-## Author
+## About Me
 
-Nadim
-Android Developer — Kotlin, Jetpack Compose, AI/ML, FastAPI
+I am Nadim Mahmud. I work with Kotlin, Jetpack Compose, Flutter, AI/ML, and FastAPI. This project was built as a 24-hour technical evaluation task.
+
+GitHub: https://github.com/NadimOvi
