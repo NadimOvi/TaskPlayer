@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class SavedViewModel(repository: VideoRepository) : ViewModel() {
-
     val savedVideos: StateFlow<List<Video>> = repository.savedVideos
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

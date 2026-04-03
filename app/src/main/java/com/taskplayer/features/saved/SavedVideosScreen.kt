@@ -21,40 +21,26 @@ fun SavedVideosScreen(
     onBack: () -> Unit,
     onViewProfile: (String) -> Unit
 ) {
-    val savedVideos by viewModel.savedVideos.collectAsState()
+    val saved by viewModel.savedVideos.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text  = "Saved Videos",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimary
-                    )
-                },
+                title          = { Text("Saved Videos", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+                        Icon(Icons.Default.ArrowBack, null, tint = TextPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundDark
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         },
         containerColor = BackgroundDark
     ) { padding ->
 
-        if (savedVideos.isEmpty()) {
+        if (saved.isEmpty()) {
             Box(
-                modifier         = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier         = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -62,16 +48,17 @@ fun SavedVideosScreen(
                         imageVector        = Icons.Default.BookmarkBorder,
                         contentDescription = null,
                         tint               = TextHint,
-                        modifier           = Modifier.size(48.dp)
+                        modifier           = Modifier.size(52.dp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(Modifier.height(14.dp))
                     Text(
                         text  = "No saved videos yet",
                         style = MaterialTheme.typography.titleMedium,
                         color = TextHint
                     )
+                    Spacer(Modifier.height(6.dp))
                     Text(
-                        text  = "Tap the bookmark icon on any video to save it",
+                        text  = "Tap on any video to save it",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextHint
                     )
@@ -79,11 +66,11 @@ fun SavedVideosScreen(
             }
         } else {
             LazyColumn(
-                modifier        = Modifier.padding(padding),
-                contentPadding  = PaddingValues(16.dp),
+                modifier            = Modifier.padding(padding),
+                contentPadding      = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(savedVideos, key = { it.id }) { video ->
+                items(saved, key = { it.id }) { video ->
                     ProfileVideoItem(video = video)
                 }
             }

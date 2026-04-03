@@ -25,48 +25,36 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun AppNavigation() {
-    val navController  = rememberNavController()
-    val repository     = remember { VideoRepository() }
+    val navController = rememberNavController()
+    val repository    = remember { VideoRepository() }
+    val feedVm        = remember { FeedViewModel(repository) }
+    val savedVm       = remember { SavedViewModel(repository) }
 
-    val feedViewModel    = remember { FeedViewModel(repository) }
-    val savedViewModel   = remember { SavedViewModel(repository) }
+    NavHost(navController = navController, startDestination = Screen.Feed.route) {
 
-    NavHost(
-        navController    = navController,
-        startDestination = Screen.Feed.route
-    ) {
         composable(Screen.Feed.route) {
             FeedScreen(
-                viewModel     = feedViewModel,
-                onViewProfile = { expertId ->
-                    navController.navigate(Screen.Profile.createRoute(expertId))
-                },
-                onSavedClick  = {
-                    navController.navigate(Screen.Saved.route)
-                }
+                viewModel     = feedVm,
+                onViewProfile = { navController.navigate(Screen.Profile.createRoute(it)) },
+                onSavedClick  = { navController.navigate(Screen.Saved.route) }
             )
         }
 
         composable(Screen.Saved.route) {
             SavedVideosScreen(
-                viewModel     = savedViewModel,
+                viewModel     = savedVm,
                 onBack        = { navController.popBackStack() },
-                onViewProfile = { expertId ->
-                    navController.navigate(Screen.Profile.createRoute(expertId))
-                }
+                onViewProfile = { navController.navigate(Screen.Profile.createRoute(it)) }
             )
         }
 
         composable(
             route     = Screen.Profile.route,
             arguments = listOf(navArgument("expertId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val expertId  = backStackEntry.arguments?.getString("expertId") ?: return@composable
-            val profileVm = remember { ExpertProfileViewModel(repository, expertId) }
-            ExpertProfileScreen(
-                viewModel = profileVm,
-                onBack    = { navController.popBackStack() }
-            )
+        ) { back ->
+            val expertId = back.arguments?.getString("expertId") ?: return@composable
+            val vm       = remember { ExpertProfileViewModel(repository, expertId) }
+            ExpertProfileScreen(viewModel = vm, onBack = { navController.popBackStack() })
         }
     }
 }

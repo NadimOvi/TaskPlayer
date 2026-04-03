@@ -1,7 +1,7 @@
 package com.taskplayer.features.feed.components
 
 import android.view.ViewGroup
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,10 +18,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
@@ -29,6 +33,7 @@ import com.taskplayer.core.theme.*
 import com.taskplayer.data.model.AccessType
 import com.taskplayer.data.model.Video
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun VideoCard(
     video: Video,
@@ -40,109 +45,131 @@ fun VideoCard(
     onFollow: () -> Unit
 ) {
     var isPlaying by remember { mutableStateOf(false) }
+    val canPlay = video.accessType == AccessType.FREE || video.isUnlocked
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(16.dp),
-        colors   = CardDefaults.cardColors(containerColor = CardDark),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier  = Modifier.fillMaxWidth(),
+        shape     = RoundedCornerShape(20.dp),
+        colors    = CardDefaults.cardColors(containerColor = CardDark),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column {
 
-            // ── Video / Player area ──────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(210.dp)
             ) {
-                val canPlay = video.accessType == AccessType.FREE || video.isUnlocked
+                AnimatedContent(
+                    targetState = isPlaying && canPlay,
+                    label       = "player"
+                ) { playing ->
+                    if (playing) {
+                        ExoPlayerView(
+                            videoUrl = video.videoUrl,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize()) {
+
+                            AsyncImage(
+                                model              = video.thumbnailUrl,
+                                contentDescription = video.videoTitle,
+                                contentScale       = ContentScale.Crop,
+                                modifier           = Modifier.fillMaxSize()
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(Color.Transparent, Color(0xDD0F0E1A)),
+                                            startY = 60f
+                                        )
+                                    )
+                            )
+
+                            Surface(
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(10.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (video.accessType == AccessType.FREE)
+                                    AccentGreen.copy(alpha = 0.9f) else PremiumBadgeBg
+                            ) {
+                                Text(
+                                    text     = if (video.accessType == AccessType.FREE) "FREE" else "⭐ PREMIUM",
+                                    style    = MaterialTheme.typography.labelSmall,
+                                    color    = if (video.accessType == AccessType.FREE) Color.White else PremiumGold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+
+                            Surface(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(10.dp),
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xAA000000)
+                            ) {
+                                Text(
+                                    text     = video.duration,
+                                    style    = MaterialTheme.typography.labelSmall,
+                                    color    = TextPrimary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                )
+                            }
+
+                            if (canPlay) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(58.dp)
+                                        .background(
+                                            Brush.radialGradient(listOf(GradientStart, GradientMid)),
+                                            CircleShape
+                                        )
+                                        .clickable { isPlaying = true },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector        = Icons.Default.PlayArrow,
+                                        contentDescription = "Play",
+                                        tint               = Color.White,
+                                        modifier           = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+
+                            if (video.accessType == AccessType.PREMIUM && !video.isUnlocked) {
+                                PremiumOverlay(onUnlock = onUnlock, price = video.price)
+                            }
+                        }
+                    }
+                }
 
                 if (isPlaying && canPlay) {
-                    VideoPlayer(videoUrl = video.videoUrl)
-                } else {
-                    // Thumbnail
-                    AsyncImage(
-                        model              = video.thumbnailUrl,
-                        contentDescription = video.videoTitle,
-                        contentScale       = ContentScale.Crop,
-                        modifier           = Modifier.fillMaxSize()
-                    )
-
-                    // Gradient overlay
-                    Box(
+                    IconButton(
+                        onClick  = { isPlaying = false },
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, Color(0xCC000000)),
-                                    startY = 80f
-                                )
-                            )
-                    )
-
-                    // Duration badge
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(8.dp),
-                        shape  = RoundedCornerShape(6.dp),
-                        color  = Color(0xCC000000)
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(32.dp)
+                            .background(Color(0xAA000000), CircleShape)
                     ) {
-                        Text(
-                            text     = video.duration,
-                            style    = MaterialTheme.typography.labelSmall,
-                            color    = TextPrimary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                        Icon(
+                            imageVector        = Icons.Default.Close,
+                            contentDescription = "Stop",
+                            tint               = Color.White,
+                            modifier           = Modifier.size(16.dp)
                         )
-                    }
-
-                    // Play button
-                    if (canPlay) {
-                        IconButton(
-                            onClick  = { isPlaying = true },
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(52.dp)
-                                .background(PrimaryGold, CircleShape)
-                        ) {
-                            Icon(
-                                imageVector        = Icons.Default.PlayArrow,
-                                contentDescription = "Play",
-                                tint               = BackgroundDark,
-                                modifier           = Modifier.size(28.dp)
-                            )
-                        }
-                    }
-
-                    // Premium overlay
-                    if (video.accessType == AccessType.PREMIUM && !video.isUnlocked) {
-                        PremiumOverlay(onUnlock = onUnlock, price = video.price)
-                    }
-
-                    // FREE badge
-                    if (video.accessType == AccessType.FREE) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(10.dp),
-                            shape = RoundedCornerShape(6.dp),
-                            color = AccentGreen.copy(alpha = 0.9f)
-                        ) {
-                            Text(
-                                text     = "FREE",
-                                style    = MaterialTheme.typography.labelSmall,
-                                color    = Color.White,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
                     }
                 }
             }
 
-            // ── Content area ─────────────────────────────────────────────
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
 
-                // Expert row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier          = Modifier.fillMaxWidth()
@@ -152,9 +179,13 @@ fun VideoCard(
                         contentDescription = video.expert.name,
                         contentScale       = ContentScale.Crop,
                         modifier           = Modifier
-                            .size(38.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
-                            .border(1.5.dp, PrimaryGold, CircleShape)
+                            .border(
+                                2.dp,
+                                Brush.sweepGradient(listOf(GradientStart, GradientEnd)),
+                                CircleShape
+                            )
                     )
 
                     Spacer(modifier = Modifier.width(10.dp))
@@ -163,124 +194,128 @@ fun VideoCard(
                         Text(
                             text     = video.expert.name,
                             style    = MaterialTheme.typography.titleMedium,
-                            color    = TextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text  = video.expert.title,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
 
-                    // Follow button
-                    OutlinedButton(
-                        onClick      = onFollow,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        shape        = RoundedCornerShape(20.dp),
-                        border       = BorderStroke(
-                            1.dp,
-                            if (video.expert.isFollowed) PrimaryGold else DividerColor
-                        ),
-                        modifier     = Modifier.height(30.dp)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                if (video.expert.isFollowed)
+                                    Brush.horizontalGradient(listOf(GradientStart, GradientMid))
+                                else
+                                    Brush.horizontalGradient(listOf(CardElevated, CardElevated))
+                            )
+                            .clickable { onFollow() }
+                            .padding(horizontal = 14.dp, vertical = 7.dp)
                     ) {
                         Text(
-                            text  = if (video.expert.isFollowed) "Following" else "Follow",
+                            text  = if (video.expert.isFollowed) "✓ Following" else "+ Follow",
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (video.expert.isFollowed) PrimaryGold else TextSecondary
+                            color = if (video.expert.isFollowed) TextPrimary else TextSecondary
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Video title
                 Text(
                     text     = video.videoTitle,
                     style    = MaterialTheme.typography.titleLarge,
-                    color    = TextPrimary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Description
                 Text(
                     text     = video.description,
                     style    = MaterialTheme.typography.bodyMedium,
-                    color    = TextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Views
-                Text(
-                    text  = "${video.views} views",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextHint
-                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    video.tags.take(3).forEach { tag ->
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = CardElevated
+                        ) {
+                            Text(
+                                text     = "# $tag",
+                                style    = MaterialTheme.typography.labelSmall,
+                                color    = AccentCyan,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = DividerColor)
+                HorizontalDivider(color = DividerColor)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Action buttons row
                 Row(
-                    modifier            = Modifier.fillMaxWidth(),
+                    modifier              = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment   = Alignment.CenterVertically
+                    verticalAlignment     = Alignment.CenterVertically
                 ) {
-                    // Like
                     IconButton(onClick = onLike) {
                         Icon(
-                            imageVector = if (video.isLiked) Icons.Filled.Favorite
-                            else Icons.Outlined.FavoriteBorder,
+                            imageVector        = if (video.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Like",
-                            tint = if (video.isLiked) AccentRed else TextSecondary,
-                            modifier = Modifier.size(22.dp)
+                            tint               = if (video.isLiked) AccentRed else TextSecondary,
+                            modifier           = Modifier.size(22.dp)
                         )
                     }
 
-                    // Save
                     IconButton(onClick = onSave) {
                         Icon(
-                            imageVector = if (video.isSaved) Icons.Filled.Bookmark
-                            else Icons.Outlined.BookmarkBorder,
+                            imageVector        = if (video.isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             contentDescription = "Save",
-                            tint = if (video.isSaved) PrimaryGold else TextSecondary,
-                            modifier = Modifier.size(22.dp)
+                            tint               = if (video.isSaved) AccentYellow else TextSecondary,
+                            modifier           = Modifier.size(22.dp)
                         )
                     }
 
-                    // Smart AI
-                    OutlinedButton(
-                        onClick        = onSmart,
-                        shape          = RoundedCornerShape(20.dp),
-                        border         = BorderStroke(1.dp, AccentBlue),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(AccentPurple.copy(alpha = 0.2f), AccentBlue.copy(alpha = 0.2f))
+                                )
+                            )
+                            .clickable { onSmart() }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
-                        Icon(
-                            imageVector        = Icons.Default.AutoAwesome,
-                            contentDescription = "Smart",
-                            tint               = AccentBlue,
-                            modifier           = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text  = "AI Insights",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = AccentBlue
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector        = Icons.Default.AutoAwesome,
+                                contentDescription = "AI",
+                                tint               = AccentPurple,
+                                modifier           = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text  = "AI Insights",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = AccentPurple
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // View Profile + Book Session
                 Row(
                     modifier              = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -288,7 +323,7 @@ fun VideoCard(
                     OutlinedButton(
                         onClick  = onViewProfile,
                         modifier = Modifier.weight(1f),
-                        shape    = RoundedCornerShape(10.dp),
+                        shape    = RoundedCornerShape(12.dp),
                         border   = BorderStroke(1.dp, DividerColor)
                     ) {
                         Text(
@@ -298,18 +333,19 @@ fun VideoCard(
                         )
                     }
 
-                    Button(
-                        onClick  = { /* Book Session */ },
-                        modifier = Modifier.weight(1f),
-                        shape    = RoundedCornerShape(10.dp),
-                        colors   = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryGold
-                        )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Brush.horizontalGradient(listOf(GradientStart, GradientMid)))
+                            .clickable { }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text  = "Book Session",
                             style = MaterialTheme.typography.labelLarge,
-                            color = BackgroundDark
+                            color = TextPrimary
                         )
                     }
                 }
@@ -318,32 +354,48 @@ fun VideoCard(
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-fun VideoPlayer(videoUrl: String) {
-    val context = LocalContext.current
-    val exoPlayer = remember {
+fun ExoPlayerView(videoUrl: String, modifier: Modifier = Modifier) {
+    val context        = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val exoPlayer = remember(videoUrl) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(videoUrl))
+            repeatMode    = Player.REPEAT_MODE_ONE
+            volume        = 1f
             prepare()
             playWhenReady = true
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose { exoPlayer.release() }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> exoPlayer.play()
+                Lifecycle.Event.ON_PAUSE  -> exoPlayer.pause()
+                else                      -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            exoPlayer.release()
+        }
     }
 
     AndroidView(
-        factory = {
-            PlayerView(it).apply {
-                player                = exoPlayer
-                useController         = true
-                layoutParams          = ViewGroup.LayoutParams(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                player       = exoPlayer
+                useController = true
+                layoutParams  = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
             }
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier
     )
 }

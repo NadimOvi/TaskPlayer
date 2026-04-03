@@ -6,13 +6,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,19 +32,13 @@ fun ExpertProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title  = { Text("Expert Profile", color = TextPrimary) },
+                title          = { Text("Expert Profile", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+                        Icon(Icons.Default.ArrowBack, null, tint = TextPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundDark
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         },
         containerColor = BackgroundDark
@@ -57,205 +50,176 @@ fun ExpertProfileScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color    = SurfaceDark
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(GradientStart.copy(alpha = 0.4f), BackgroundDark)
+                        )
+                    )
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier            = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
                     AsyncImage(
                         model              = expert.photoUrl,
                         contentDescription = expert.name,
                         contentScale       = ContentScale.Crop,
                         modifier           = Modifier
-                            .size(96.dp)
+                            .size(100.dp)
                             .clip(CircleShape)
-                            .border(2.dp, PrimaryGold, CircleShape)
+                            .border(
+                                3.dp,
+                                Brush.sweepGradient(listOf(GradientStart, GradientEnd)),
+                                CircleShape
+                            )
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(Modifier.height(14.dp))
 
-                    Text(
-                        text  = expert.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text  = expert.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PrimaryGold
-                    )
+                    Text(expert.name, style = MaterialTheme.typography.headlineMedium)
+                    Text(expert.title, style = MaterialTheme.typography.bodyMedium, color = AccentCyan)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(18.dp))
 
-                    // Stats row
                     Row(
                         modifier              = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        StatItem(label = "Followers",
-                            value = "${expert.followers / 1000}K")
-                        StatItem(label = "Sessions",
-                            value = "${expert.totalSessions}+")
-                        StatItem(label = "Rating",
-                            value = "${expert.rating}",
-                            icon  = true)
+                        StatChip(label = "Followers",  value = "${expert.followers / 1000}K")
+                        StatChip(label = "Sessions",   value = "${expert.totalSessions}+")
+                        StatChip(label = "Rating",     value = "${expert.rating} ⭐")
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(18.dp))
 
-                    // Follow + Book row
                     Row(
                         modifier              = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        OutlinedButton(
-                            onClick  = { viewModel.toggleFollow() },
-                            modifier = Modifier.weight(1f),
-                            shape    = RoundedCornerShape(10.dp),
-                            border   = BorderStroke(
-                                1.dp,
-                                if (expert.isFollowed) PrimaryGold else DividerColor
-                            )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    if (expert.isFollowed)
+                                        Brush.horizontalGradient(listOf(GradientStart, GradientMid))
+                                    else
+                                        Brush.horizontalGradient(listOf(CardElevated, CardElevated))
+                                )
+                                .clickable { viewModel.toggleFollow() }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text  = if (expert.isFollowed) "Following" else "Follow",
-                                color = if (expert.isFollowed) PrimaryGold else TextSecondary,
-                                style = MaterialTheme.typography.labelLarge
+                                text  = if (expert.isFollowed) "✓ Following" else "+ Follow",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (expert.isFollowed) TextPrimary else TextSecondary
                             )
                         }
 
-                        Button(
-                            onClick  = { /* Book */ },
-                            modifier = Modifier.weight(1f),
-                            shape    = RoundedCornerShape(10.dp),
-                            colors   = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryGold
-                            )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Brush.horizontalGradient(listOf(GradientStart, GradientMid)))
+                                .clickable { }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text  = "Book Session",
-                                color = BackgroundDark,
-                                style = MaterialTheme.typography.labelLarge
+                                style = MaterialTheme.typography.labelLarge,
+                                color = TextPrimary
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Bio
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    text  = "About",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = TextPrimary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text  = expert.bio,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary
-                )
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Text("About", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                Text(expert.bio, style = MaterialTheme.typography.bodyLarge)
 
-                // Videos by expert
+                Spacer(Modifier.height(24.dp))
+
                 Text(
                     text  = "Videos by ${expert.name.split(" ").first()}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = TextPrimary
+                    style = MaterialTheme.typography.titleLarge
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(Modifier.height(12.dp))
 
-                uiState.videos.forEach { video ->
-                    ProfileVideoItem(video = video)
-                    Spacer(modifier = Modifier.height(10.dp))
+                if (uiState.videos.isEmpty()) {
+                    Text(
+                        text  = "No videos available yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextHint
+                    )
+                } else {
+                    uiState.videos.forEach { video ->
+                        ProfileVideoItem(video)
+                        Spacer(Modifier.height(10.dp))
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
 }
 
 @Composable
-fun StatItem(label: String, value: String, icon: Boolean = false) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (icon) {
-                Icon(
-                    imageVector        = Icons.Default.Star,
-                    contentDescription = null,
-                    tint               = PrimaryGold,
-                    modifier           = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            Text(
-                text  = value,
-                style = MaterialTheme.typography.titleLarge,
-                color = TextPrimary
-            )
+fun StatChip(label: String, value: String) {
+    Surface(shape = RoundedCornerShape(12.dp), color = CardDark) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier            = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+        ) {
+            Text(value, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+            Text(label, style = MaterialTheme.typography.labelSmall)
         }
-        Text(
-            text  = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary
-        )
     }
 }
 
 @Composable
 fun ProfileVideoItem(video: Video) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = CardDark
-    ) {
+    Surface(shape = RoundedCornerShape(14.dp), color = CardDark) {
         Row(
-            modifier          = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier          = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model              = video.thumbnailUrl,
-                contentDescription = video.videoTitle,
+                contentDescription = null,
                 contentScale       = ContentScale.Crop,
-                modifier           = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier           = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
             )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
+            Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text     = video.videoTitle,
                     style    = MaterialTheme.typography.titleMedium,
-                    color    = TextPrimary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(
                     text  = video.duration,
                     style = MaterialTheme.typography.labelSmall,
                     color = TextHint
                 )
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
+            Spacer(Modifier.width(8.dp))
             Surface(
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = if (video.accessType == AccessType.FREE)
-                    AccentGreen.copy(alpha = 0.2f)
-                else PremiumBadgeBg
+                    AccentGreen.copy(0.15f) else PremiumBadgeBg
             ) {
                 Text(
                     text     = if (video.accessType == AccessType.FREE) "Free" else "Premium",

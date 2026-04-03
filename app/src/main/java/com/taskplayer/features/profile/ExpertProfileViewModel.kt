@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 data class ProfileUiState(
-    val expert: Expert?      = null,
-    val videos: List<Video>  = emptyList()
+    val expert: Expert?     = null,
+    val videos: List<Video> = emptyList()
 )
 
 class ExpertProfileViewModel(
@@ -21,14 +21,16 @@ class ExpertProfileViewModel(
     val uiState: StateFlow<ProfileUiState> = _uiState
 
     init {
-        val expert = repository.getExpertById(expertId)
-        val videos = repository.getVideosByExpert(expertId)
-        _uiState.value = ProfileUiState(expert = expert, videos = videos)
+        _uiState.value = ProfileUiState(
+            expert = repository.getExpertById(expertId),
+            videos = repository.getVideosByExpert(expertId)
+        )
     }
 
     fun toggleFollow() {
         repository.toggleFollow(expertId)
-        val updated = repository.getExpertById(expertId)
-        _uiState.value = _uiState.value.copy(expert = updated)
+        _uiState.value = _uiState.value.copy(
+            expert = repository.getExpertById(expertId)
+        )
     }
 }

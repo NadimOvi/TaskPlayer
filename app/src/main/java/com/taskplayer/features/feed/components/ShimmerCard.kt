@@ -16,96 +16,43 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ShimmerCard() {
-    val shimmerColors = listOf(
-        Color(0xFF1C1C26),
-        Color(0xFF2A2A38),
-        Color(0xFF1C1C26)
-    )
-
     val transition = rememberInfiniteTransition(label = "shimmer")
-    val translateAnim by transition.animateFloat(
-        initialValue   = 0f,
-        targetValue    = 1000f,
-        animationSpec  = infiniteRepeatable(
-            animation  = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer_anim"
+    val x by transition.animateFloat(
+        initialValue  = 0f,
+        targetValue   = 1200f,
+        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Restart),
+        label         = "x"
     )
 
     val brush = Brush.linearGradient(
-        colors     = shimmerColors,
-        start      = Offset(translateAnim - 200f, 0f),
-        end        = Offset(translateAnim, 0f)
+        colors = listOf(Color(0xFF1E1D33), Color(0xFF2E2C4A), Color(0xFF1E1D33)),
+        start  = Offset(x - 300f, 0f),
+        end    = Offset(x, 0f)
     )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1C1C26))
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF1E1D33))
     ) {
-        // Video placeholder
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(210.dp)
-                .background(brush)
-        )
-
-        Column(modifier = Modifier.padding(14.dp)) {
+        Box(modifier = Modifier.fillMaxWidth().height(210.dp).background(brush))
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(brush)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
+                Box(Modifier.size(42.dp).clip(CircleShape).background(brush))
+                Spacer(Modifier.width(10.dp))
                 Column {
-                    Box(
-                        modifier = Modifier
-                            .width(140.dp)
-                            .height(14.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(100.dp)
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
+                    Box(Modifier.width(150.dp).height(14.dp).clip(RoundedCornerShape(4.dp)).background(brush))
+                    Spacer(Modifier.height(6.dp))
+                    Box(Modifier.width(100.dp).height(10.dp).clip(RoundedCornerShape(4.dp)).background(brush))
                 }
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(brush)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(12.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(brush)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(brush)
-            )
+            Spacer(Modifier.height(14.dp))
+            Box(Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(4.dp)).background(brush))
+            Spacer(Modifier.height(8.dp))
+            Box(Modifier.fillMaxWidth(0.65f).height(12.dp).clip(RoundedCornerShape(4.dp)).background(brush))
+            Spacer(Modifier.height(16.dp))
+            Box(Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(12.dp)).background(brush))
         }
     }
 }
