@@ -36,6 +36,10 @@ An expert learning platform for Android built with Kotlin and Jetpack Compose. U
 
 ---
 
+## Project Structure
+
+![Project Structure](screenshots/project_structure.png)
+
 ## Features
 
 - Vertical scrollable expert video feed
